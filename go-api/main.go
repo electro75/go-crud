@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -10,7 +11,7 @@ import (
 )
 
 type Article struct {
-	Id		string `json:"Id"`
+	Id      string `json:"Id"`
 	Title   string `json:"Title"`
 	Desc    string `json: "desc"`
 	Content string `json: "content"`
@@ -27,14 +28,27 @@ func returnALlArticles(w http.ResponseWriter, r *http.Request) {
 func returnSingleArticle(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	key := vars["id"]
-	fmt.Fprintf(w, "key: "+ key)
+	fmt.Fprintf(w, "key: "+key)
 
-	for _,article:= range Articles {
+	for _, article := range Articles {
 		if article.Id == key {
 			json.NewEncoder(w).Encode(article)
 		}
 	}
 
+}
+
+func createNewArticle(w http.ResponseWriter, r *http.Request) {
+
+	reqBody, _ := ioutil.ReadAll(r.Body)
+	var article Article
+	json.Unmarshal(reqBody, &article)
+	Articles = append(Articles, article)
+
+	json.NewEncoder(w).Encode(article)
+
+	fmt.Fprintf(w, "Posted successfully")
+	fmt.Println("Endpoint hit: create one")
 }
 
 func homePage(w http.ResponseWriter, r *http.Request) {
@@ -46,6 +60,7 @@ func handleRequests() {
 
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/", homePage)
+	myRouter.HandleFunc("/article", createNewArticle)
 	myRouter.HandleFunc("/article/{id}", returnSingleArticle)
 	myRouter.HandleFunc("/articles", returnALlArticles)
 	fmt.Println("listening on port : 10000")
