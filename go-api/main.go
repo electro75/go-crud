@@ -51,6 +51,18 @@ func createNewArticle(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Endpoint hit: create one")
 }
 
+func deleteArticle(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	id := vars["id"]
+
+	for index, article := range Articles {
+		if article.Id == id {
+			Articles = append(Articles[:index], Articles[index+1:]...)
+		}
+	}
+}
+
 func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to page")
 	fmt.Println("Endpoint hit: homepage")
@@ -60,7 +72,8 @@ func handleRequests() {
 
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/", homePage)
-	myRouter.HandleFunc("/article", createNewArticle)
+	myRouter.HandleFunc("/article", createNewArticle).Methods("POST")
+	myRouter.HandleFunc("article/{id}", deleteArticle).Methods("DELETE")
 	myRouter.HandleFunc("/article/{id}", returnSingleArticle)
 	myRouter.HandleFunc("/articles", returnALlArticles)
 	fmt.Println("listening on port : 10000")
